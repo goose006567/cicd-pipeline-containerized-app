@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  tagged-release:
+    name: Tag & push release image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release image
+        run: |
+          docker build -f app/Dockerfile \
+            -t ghcr.io/goose006567/cicd-app:${{ github.sha }} \
+            -t ghcr.io/goose006567/cicd-app:latest .
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release images
+        run: |
+          docker push ghcr.io/goose006567/cicd-app:${{ github.sha }}
+          docker push ghcr.io/goose006567/cicd-app:latest
+
+  rollout:
+    name: Roll out new version
+    needs: tagged-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rolling update on target host
+        run: |
+          echo "=== production rollout placeholder ==="
+          echo "docker service update --image ghcr.io/goose006567/cicd-app:${{ github.sha }} cicd_app"

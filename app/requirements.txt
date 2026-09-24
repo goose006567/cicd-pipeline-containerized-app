@@ -1,0 +1,1 @@
+# stdlib only — hermetic build, no external packages needed at runtime
